@@ -24,9 +24,6 @@ const OrderManagement = () => {
   };
 
   const handleDelete = async (orderId) => {
-    // const confirm = window.confirm("Are you sure you want to delete this order?");
-    // if (!confirm) return;
-
     try {
       await deleteDoc(doc(db, "orders", orderId));
       setOrders(prev => prev.filter(order => order.id !== orderId));
@@ -68,11 +65,33 @@ const OrderManagement = () => {
                   ).toLocaleString()
                 : "No timestamp"}
             </p>
+
+            {/* Render client details */}
+            {order.client && (
+              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f1f1f1" }}>
+                <h3>Client Details</h3>
+                <p><strong>Client Name:</strong> {order.client.name}</p>
+                <p><strong>Email:</strong> {order.client.email}</p>
+                <p><strong>Phone:</strong> {order.client.phone}</p>
+                <p><strong>Address:</strong> {order.client.address}</p>
+              </div>
+            )}
+
             <ul>
               {order.items?.map((item, index) => (
-                <li key={item.id || index}>
-                  {item.qty} x {item.name} (${item.price?.toFixed(2)})
-                </li>
+                <>
+                <h3>The Order</h3>
+                  <li key={item.id || index} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <img
+        src={item.image} // or item.img if that's your field name
+        alt={item.name}
+        style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
+      />
+      <span>
+        {item.qty} x {item.name} (${item.price?.toFixed(2)}) Total: <strong>${item.qty * item.price.toFixed(2)}</strong> 
+      </span>
+    </li>
+                </>
               ))}
             </ul>
 

@@ -39,7 +39,7 @@ function App() {
         <nav style={styles.nav}>
           <h2 style={styles.logo}>Small Shop</h2>
           <div style={styles.links}>
-            <Link to="/shop" style={styles.link}>Shop</Link>
+            {/* <Link to="/shop" style={styles.link}>Shop</Link> */}
             <Link to="/orders" style={styles.link}>Order Management</Link>
             <Link to="/add-product" style={styles.link}>Add Product</Link>
           </div>
