@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import './OrderManagement.css';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -24,6 +25,9 @@ const OrderManagement = () => {
   };
 
   const handleDelete = async (orderId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this order?");
+    if (!confirmDelete) return;
+
     try {
       await deleteDoc(doc(db, "orders", orderId));
       setOrders(prev => prev.filter(order => order.id !== orderId));
@@ -34,27 +38,21 @@ const OrderManagement = () => {
 
   useEffect(() => {
     fetchOrders();
+    // const interval = setInterval(fetchOrders, 5000); // every 5s
+    // return () => clearInterval(interval);
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Received Orders</h2>
+    <div className="order-container">
+      <h2 className="order-heading">📦 Received Orders</h2>
 
       {loading ? (
-        <p>Loading orders...</p>
+        <p className="loading-text">Loading orders...</p>
       ) : orders.length === 0 ? (
-        <p>No orders yet.</p>
+        <p className="no-orders">No orders yet.</p>
       ) : (
         orders.map(order => (
-          <div
-            key={order.id}
-            style={{
-              border: "1px solid #ccc",
-              margin: "10px 0",
-              padding: "10px",
-              borderRadius: "5px"
-            }}
-          >
+          <div className="order-box" key={order.id}>
             <p><strong>Order ID:</strong> {order.id}</p>
             <p><strong>Time:</strong> 
               {order.timestamp
@@ -66,51 +64,50 @@ const OrderManagement = () => {
                 : "No timestamp"}
             </p>
 
-            {/* Render client details */}
             {order.client && (
-              <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f1f1f1" }}>
+              <div className="client-details">
                 <h3>Client Details</h3>
-                <p><strong>Client Name:</strong> {order.client.name}</p>
+                <p><strong>Name:</strong> {order.client.name}</p>
                 <p><strong>Email:</strong> {order.client.email}</p>
                 <p><strong>Phone:</strong> {order.client.phone}</p>
                 <p><strong>Address:</strong> {order.client.address}</p>
               </div>
             )}
 
-            <ul>
+            <h3 className="order-items-title">🛒 Ordered Items</h3>
+            <ul className="order-items">
               {order.items?.map((item, index) => (
-                <>
-                <h3>The Order</h3>
-                  <li key={item.id || index} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <img
-        src={item.image} // or item.img if that's your field name
-        alt={item.name}
-        style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
-      />
-      <span>
-        {item.qty} x {item.name} (${item.price?.toFixed(2)}) Total: <strong>${item.qty * item.price.toFixed(2)}</strong> 
-      </span>
-    </li>
-                </>
+                <li key={item.id || index} className="order-item">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="order-item-image"
+                  />
+                  <span className="order-item-details">
+                    {item.qty} x {item.name} (${item.price?.toFixed(2)}) — 
+                    <strong> Total: ${item.qty * item.price?.toFixed(2)}</strong>
+                  </span>
+                </li>
               ))}
             </ul>
 
-            <button
-              onClick={() => handleDelete(order.id)}
-              style={{
-                marginTop: "10px",
-                padding: "5px 10px",
-                backgroundColor: "#f44336",
-                color: "#fff",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
-              Delete Order
+            <button className="delete-btn" onClick={() => handleDelete(order.id)}>
+              🗑️ Delete Order
             </button>
           </div>
         ))
+      )}
+            {/* Confirmation Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <p>Are you sure you want to delete this product?</p>
+            <div className="modal-actions">
+              <button className="confirm-btn" onClick={confirmDelete}>Yes, Delete</button>
+              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

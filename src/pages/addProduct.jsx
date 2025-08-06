@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import "./AddProduct.css";
 
 const AddProduct = () => {
   const [name, setName] = useState("");
@@ -11,15 +12,16 @@ const AddProduct = () => {
   const [message, setMessage] = useState("");
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
-  // Fetch products from Firestore
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
       const querySnapshot = await getDocs(collection(db, "products"));
-      const productList = querySnapshot.docs.map(doc => ({
+      const productList = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       setProducts(productList);
     } catch (error) {
@@ -33,9 +35,25 @@ const AddProduct = () => {
     fetchProducts();
   }, []);
 
+  
+
+useEffect(() => {
+  if (message) {
+    const timer = setTimeout(() => {
+      setMessage("");
+    }, 5000);
+    return () => clearTimeout(timer);
+  }
+}, [message]);
+
+const handleFocus = () => {
+  if (message) {
+    setMessage("");
+  }
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!name || !price || !image || !quantity) {
       setMessage("Please fill in all fields.");
       return;
@@ -48,11 +66,14 @@ const AddProduct = () => {
         price: parseFloat(price),
         image,
         quantity: parseInt(quantity),
-        createdAt: new Date()
+        createdAt: new Date(),
       });
       setMessage("Product added successfully!");
-      setName(""); setPrice(""); setImage(""); setQuantity("");
-      fetchProducts();  // Refresh list after adding
+      setName("");
+      setPrice("");
+      setImage("");
+      setQuantity("");
+      fetchProducts();
     } catch (error) {
       console.error("Error adding product:", error);
       setMessage("Failed to add product.");
@@ -61,14 +82,17 @@ const AddProduct = () => {
     }
   };
 
-  // Delete product by id
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
-    if (!confirmDelete) return;
+  const openModal = (id) => {
+    setSelectedProductId(id);
+    setShowModal(true);
+  };
 
+  const confirmDelete = async () => {
     try {
-      await deleteDoc(doc(db, "products", id));
-      setProducts(prev => prev.filter(product => product.id !== id));
+      await deleteDoc(doc(db, "products", selectedProductId));
+      setProducts((prev) => prev.filter((product) => product.id !== selectedProductId));
+      setShowModal(false);
+      setSelectedProductId(null);
     } catch (error) {
       console.error("Error deleting product:", error);
       alert("Failed to delete product");
@@ -76,94 +100,50 @@ const AddProduct = () => {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
+    <div className="add-product-container">
       <h2>Add New Product</h2>
-      {message && <p>{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Product name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          style={{ display: "block", marginBottom: "10px", width: "100%" }}
-        />
-        <input
-          type="number"
-          placeholder="Price"
-          value={price}
-          onChange={e => setPrice(e.target.value)}
-          step="0.01"
-          style={{ display: "block", marginBottom: "10px", width: "100%" }}
-        />
-        <input
-          type="text"
-          placeholder="Image URL"
-          value={image}
-          onChange={e => setImage(e.target.value)}
-          style={{ display: "block", marginBottom: "10px", width: "100%" }}
-        />
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={e => setQuantity(e.target.value)}
-          style={{ display: "block", marginBottom: "10px", width: "100%" }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
+      <div className="message-box">{message && <p className="message">{message}</p>}</div>
+      <form onSubmit={handleSubmit} className="form">
+        <input type="text" placeholder="Product name" value={name} onFocus={handleFocus} onChange={(e) => setName(e.target.value)} />
+        <input type="number" placeholder="Price" value={price} onFocus={handleFocus} onChange={(e) => setPrice(e.target.value)} step="0.01" />
+        <input type="text" placeholder="Image URL" value={image} onFocus={handleFocus} onChange={(e) => setImage(e.target.value)} />
+        <input type="number" placeholder="Quantity" value={quantity} onFocus={handleFocus} onChange={(e) => setQuantity(e.target.value)} />
+        <button type="submit" disabled={loading}>
           {loading ? "Adding..." : "Add Product"}
         </button>
       </form>
 
-      <h2 style={{ marginTop: "40px" }}>Existing Products</h2>
+      <h2>Existing Products</h2>
       {loadingProducts ? (
         <p>Loading products...</p>
       ) : products.length === 0 ? (
         <p>No products found.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {products.map(product => (
-            <li
-              key={product.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "10px",
-                border: "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "5px"
-              }}
-            >
+        <ul className="product-list">
+          {products.map((product) => (
+            <li key={product.id} className="product-item">
               <div>
                 <strong>{product.name}</strong> — ${product.price.toFixed(2)} — Qty: {product.quantity}
               </div>
-              <button
-                onClick={() => handleDelete(product.id)}
-                style={{
-                  backgroundColor: "#f44336",
-                  color: "white",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
-              >
+              <button className="delete-btn" onClick={() => openModal(product.id)}>
                 Delete
               </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Confirmation Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <p>Are you sure you want to delete this product?</p>
+            <div className="modal-actions">
+              <button className="confirm-btn" onClick={confirmDelete}>Yes, Delete</button>
+              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

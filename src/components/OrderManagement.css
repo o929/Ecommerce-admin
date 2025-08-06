@@ -1,0 +1,81 @@
+.order-container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.order-heading {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.loading-text,
+.no-orders {
+  text-align: center;
+  font-size: 18px;
+  color: #777;
+}
+
+.order-box {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+}
+
+.client-details {
+  background-color: #f7f7f7;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 8px;
+}
+
+.order-items-title {
+  margin-top: 20px;
+}
+
+.order-items {
+  list-style: none;
+  padding: 0;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  gap: 10px;
+}
+
+.order-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.order-item-details {
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}

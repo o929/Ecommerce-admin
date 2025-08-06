@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import OrderManagement from './components/OrderManagement';
 import AddProduct from "./pages/addProduct";
-import ShopPage from "./pages/ShopPage";
+// import ShopPage from "./pages/ShopPage";
 import './index.css';
 
 function App() {
@@ -47,16 +47,6 @@ function App() {
       </header>
 
       <Routes>
-        <Route path="/" element={<ShopPage />} />
-<Route
-  path="/"
-  element={<ShopPage cart={cart} setCart={setCart} />}
-/>
-<Route
-  path="/shop"
-  element={<ShopPage cart={cart} setCart={setCart} />}
-/>
-
         <Route path="/add-product" element={<AddProduct />} />
         <Route path="/orders" element={<OrderManagement />} />
       </Routes>
