@@ -4,6 +4,7 @@ import OrderManagement from './components/OrderManagement';
 import AddProduct from "./pages/addProduct";
 // import ShopPage from "./pages/ShopPage";
 import './index.css';
+// import ImageUploader from './test'; // Importing the ImageUploader component
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -47,8 +48,10 @@ function App() {
       </header>
 
       <Routes>
+        <Route path="/" element={<AddProduct />} />
         <Route path="/add-product" element={<AddProduct />} />
         <Route path="/orders" element={<OrderManagement />} />
+        {/* <Route path="/up" element={<ImageUploader />} /> */}
       </Routes>
     </Router>
   );

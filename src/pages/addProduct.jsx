@@ -5,6 +5,7 @@ import "./AddProduct.css";
 
 const AddProduct = () => {
   const [name, setName] = useState("");
+  const [det, setDet ] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -35,8 +36,8 @@ const AddProduct = () => {
     fetchProducts();
   }, []);
 
-  
 
+// fill in the blanks msg 
 useEffect(() => {
   if (message) {
     const timer = setTimeout(() => {
@@ -64,6 +65,7 @@ const handleFocus = () => {
       await addDoc(collection(db, "products"), {
         name,
         price: parseFloat(price),
+        det,
         image,
         quantity: parseInt(quantity),
         createdAt: new Date(),
@@ -105,6 +107,7 @@ const handleFocus = () => {
       <div className="message-box">{message && <p className="message">{message}</p>}</div>
       <form onSubmit={handleSubmit} className="form">
         <input type="text" placeholder="Product name" value={name} onFocus={handleFocus} onChange={(e) => setName(e.target.value)} />
+        <input type="text" placeholder="Product name" value={det} onFocus={handleFocus} onChange={(e) => setDet(e.target.value)} />
         <input type="number" placeholder="Price" value={price} onFocus={handleFocus} onChange={(e) => setPrice(e.target.value)} step="0.01" />
         <input type="text" placeholder="Image URL" value={image} onFocus={handleFocus} onChange={(e) => setImage(e.target.value)} />
         <input type="number" placeholder="Quantity" value={quantity} onFocus={handleFocus} onChange={(e) => setQuantity(e.target.value)} />
@@ -123,7 +126,8 @@ const handleFocus = () => {
           {products.map((product) => (
             <li key={product.id} className="product-item">
               <div>
-                <strong>{product.name}</strong> — ${product.price.toFixed(2)} — Qty: {product.quantity}
+                <img className="exist-product-img" src={product.image} alt="" />
+                 Name: <strong>{product.name} </strong>| Price:<strong> ${product.price.toFixed(2)} </strong> | Quantity:<strong> {product.quantity}</strong>
               </div>
               <button className="delete-btn" onClick={() => openModal(product.id)}>
                 Delete

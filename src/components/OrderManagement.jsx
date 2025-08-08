@@ -1,4 +1,3 @@
-// src/components/OrderManagement.jsx
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -7,6 +6,8 @@ import './OrderManagement.css';
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const fetchOrders = async () => {
     try {
@@ -24,27 +25,35 @@ const OrderManagement = () => {
     }
   };
 
-  const handleDelete = async (orderId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this order?");
-    if (!confirmDelete) return;
+  const handleDelete = (orderId) => {
+    setDeleteId(orderId);
+    setShowModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
 
     try {
-      await deleteDoc(doc(db, "orders", orderId));
-      setOrders(prev => prev.filter(order => order.id !== orderId));
+      await deleteDoc(doc(db, "orders", deleteId));
+      setOrders(prev => prev.filter(order => order.id !== deleteId));
     } catch (error) {
       console.error("Error deleting order:", error);
+    } finally {
+      setShowModal(false);
+      setDeleteId(null);
     }
   };
 
   useEffect(() => {
     fetchOrders();
-    // const interval = setInterval(fetchOrders, 5000); // every 5s
+    // const interval = setInterval(fetchOrders, 5000);
     // return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="order-container">
       <h2 className="order-heading">📦 Received Orders</h2>
+      <button onClick={()=>{fetchOrders()}}>Refreash</button>
 
       {loading ? (
         <p className="loading-text">Loading orders...</p>
@@ -97,7 +106,7 @@ const OrderManagement = () => {
           </div>
         ))
       )}
-            {/* Confirmation Modal */}
+
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">
