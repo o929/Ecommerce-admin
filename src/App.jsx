@@ -31,6 +31,8 @@ function App() {
       textDecoration: 'none',
       color: '#007bff',
       fontWeight: 'bold',
+      fontSize: '16px',
+      
     },
   };
 
