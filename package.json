@@ -3,10 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://o929.github.io/Shop-admin",
-
-  
-  
+  "homepage": "https://o929.github.io/Shop-admin/",  
   "scripts": {
     "dev": "vite",
     "build": "vite build",
