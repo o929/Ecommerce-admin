@@ -12,6 +12,7 @@ const AddProduct = () => {
   const [quantity, setQuantity] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [errormessage, setErrormessage] = useState("");
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -43,24 +44,26 @@ const AddProduct = () => {
   }, []);
 
   useEffect(() => {
-    if (message) {
+    if (message || errormessage) {
       const timer = setTimeout(() => {
         setMessage("");
+        setErrormessage("");
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message ,errormessage]); 
 
   const handleFocus = () => {
-    if (message) {
+ 
       setMessage("");
-    }
+      setErrormessage("");
+
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !price || !image || !quantity) {
-      setMessage("Please fill in all fields.");
+    if (!name || !price || !image || !quantity || !category || category === "Empty" || !det) {
+      setErrormessage("Please fill in all fields.");
       return;
     }
 
@@ -93,7 +96,7 @@ const AddProduct = () => {
       });
 
       setMessage("Product added successfully!");
-      setCategory("");
+      setCategory("Empty");
       setName("");
       setPrice("");
       setDet("");
@@ -102,7 +105,7 @@ const AddProduct = () => {
       fetchProducts();
     } catch (error) {
       console.error("Error adding product:", error);
-      setMessage("Failed to add product.");
+      setErrormessage("Failed to add product.");
     } finally {
       setLoading(false);
     }
@@ -128,9 +131,14 @@ const AddProduct = () => {
   return (
     <div className="add-product-container">
       <h2>Add New Product</h2>
-      <div className="message-box">{message && <p className="message">{message}</p>}</div>
+<div className="message-box">
+  {message && <p className="success">{message}</p>}
+  {errormessage && <p className="error">{errormessage}</p>}
+</div>
+
       <form onSubmit={handleSubmit} className="form">
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
+  <option value="Empty">Empty</option>
   <option value="wemen">Women</option>
   <option value="men">Men</option>
   <option value="kids">Kids</option>
@@ -166,7 +174,10 @@ const AddProduct = () => {
         <p>No products found.</p>
       ) : (
         <ul className="product-list">
-          {["wemen", "men", "kids"].map((cat) => (
+
+{/* fetching product depending on the catigotry */}
+
+    {["wemen", "men", "kids"].map((cat) => (
   <div key={cat}>
     <h3>{cat.toUpperCase()}</h3>
     <ul className="product-list">
