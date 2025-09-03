@@ -16,6 +16,8 @@ const AddProduct = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [category, setCategory] = useState("wemen"); // default value
+
 
   const CLOUD_NAME = "dlrxomdfh";
   const UPLOAD_PRESET = "Shop-preset";
@@ -86,10 +88,12 @@ const AddProduct = () => {
         det,
         image: imageUrl,
         quantity: parseInt(quantity),
+        category,
         createdAt: new Date(),
       });
 
       setMessage("Product added successfully!");
+      setCategory("");
       setName("");
       setPrice("");
       setDet("");
@@ -126,9 +130,16 @@ const AddProduct = () => {
       <h2>Add New Product</h2>
       <div className="message-box">{message && <p className="message">{message}</p>}</div>
       <form onSubmit={handleSubmit} className="form">
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+  <option value="wemen">Women</option>
+  <option value="men">Men</option>
+  <option value="kids">Kids</option>
+</select>
+
         <input type="text" placeholder="Product name" value={name} onFocus={handleFocus} onChange={(e) => setName(e.target.value)} />
         <input type="text" placeholder="Product Details" value={det} onFocus={handleFocus} onChange={(e) => setDet(e.target.value)} />
         <input type="number" placeholder="Price" value={price} onFocus={handleFocus} onChange={(e) => setPrice(e.target.value)} step="0.01" />
+        <input type="number" placeholder="Quantity" value={quantity} onFocus={handleFocus} onChange={(e) => setQuantity(e.target.value)} />
 
         {/* File upload instead of URL input */}
         <input type="file" accept="image/*"   onChange={(e) => {
@@ -143,8 +154,6 @@ const AddProduct = () => {
     <img src={preview} alt="Preview" className="preview-img" />
   </div>
 )}
-
-        <input type="number" placeholder="Quantity" value={quantity} onFocus={handleFocus} onChange={(e) => setQuantity(e.target.value)} />
         <button type="submit" disabled={loading}>
           {loading ? "Adding..." : "Add Product"}
         </button>
@@ -157,17 +166,25 @@ const AddProduct = () => {
         <p>No products found.</p>
       ) : (
         <ul className="product-list">
-          {products.map((product) => (
-            <li key={product.id} className="product-item">
-              <div>
-                <img className="exist-product-img" src={product.image} alt={product.name} />
-                 Name: <strong>{product.name} </strong> | Price: <strong>${product.price.toFixed(2)} </strong> | Quantity: <strong>{product.quantity}</strong>
-              </div>
-              <button className="delete-btn" onClick={() => openModal(product.id)}>
-                Delete
-              </button>
-            </li>
-          ))}
+          {["wemen", "men", "kids"].map((cat) => (
+  <div key={cat}>
+    <h3>{cat.toUpperCase()}</h3>
+    <ul className="product-list">
+      {products
+        .filter((p) => p.category === cat)
+        .map((product) => (
+          <li key={product.id} className="product-item">
+            <img className="exist-product-img" src={product.image} alt={product.name} />
+            Name: <strong>{product.name}</strong> | 
+            Price: <strong>${product.price.toFixed(2)}</strong> | 
+            Qty: <strong>{product.quantity}</strong>
+            <button className="delete-btn" onClick={() => openModal(product.id)}>Delete</button>
+          </li>
+        ))}
+    </ul>
+  </div>
+))}
+
         </ul>
       )}
 
