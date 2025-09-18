@@ -95,7 +95,7 @@ function App() {
         <main style={styles.mainContent}>
           <Routes>
             <Route path="/" element={<Navigate to="/add-product" replace />} />
-            <Route path="*" element={<Navigate to="/add-product" replace />} />
+            <Route path="/Ecommerce-admin" element={<Navigate to="/add-product" replace />} />
             <Route path="/add-product" element={<AddProduct />} />
             <Route path="/add-hero" element={<AddHero />} />
             <Route path="/orders" element={<OrderManagement />} />
