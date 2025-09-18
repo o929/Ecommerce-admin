@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://o929.github.io/Shop-admin/",
+  "homepage": "https://o929.github.io/Ecommerce-admin/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -16,6 +16,7 @@
     "cloudinary": "^2.7.0",
     "firebase": "^12.0.0",
     "gh-pages": "^6.3.0",
+    "lucide-react": "^0.542.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1"
