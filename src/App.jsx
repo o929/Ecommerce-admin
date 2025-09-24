@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import OrderManagement from "./components/OrderManagement";
 import AddProduct from "./pages/AddProduct";
 import AddHero from "./pages/AddHero";
