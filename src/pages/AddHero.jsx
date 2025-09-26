@@ -200,7 +200,7 @@ const AddHero = () => {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-red-700 to-red-600 p-6">
+          <div className="bg-gradient-to-r from-red-700 to-red-300 p-6">
             <h1 className="text-2xl md:text-3xl font-bold text-white">Hero Section Management</h1>
             <p className="text-red-100 mt-1">Create and manage your hero sections</p>
           </div>
@@ -371,11 +371,11 @@ const AddHero = () => {
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-gray-900 truncate">{hero.title}</h3>
+                            <h3 className="font-bold text-gray-900 truncate">Title: {hero.title}</h3>
                             <div className="mt-2 flex items-center text-sm text-gray-600">
                               <span className="truncate">Button: {hero.buttonText}</span>
                             </div>
-                            <p className="mt-2 text-sm text-gray-600 line-clamp-2">{hero.description}</p>
+                            <p className="mt-2 text-sm text-gray-600 line-clamp-2">Description: {hero.description}</p>
                           </div>
                         </div>
                       </div>

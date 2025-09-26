@@ -27,7 +27,7 @@ import {
 export default function AddProduct() {
   // Form state
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [det, setDet] = useState("");
   const [price, setPrice] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -144,7 +144,7 @@ export default function AddProduct() {
     // Basic validation
     if (
       !name.trim() ||
-      !description.trim() ||
+      !det.trim() ||
       !price ||
       !newPrice ||
       !quantity ||
@@ -183,7 +183,7 @@ export default function AddProduct() {
       // Save to Firestore
       await addDoc(collection(db, "products"), {
         name: name.trim(),
-        description: description.trim(),
+        det: det.trim(),
         price: parseFloat(price),
         newPrice: parseFloat(newPrice),
         quantity: parseInt(quantity, 10),
@@ -203,7 +203,7 @@ export default function AddProduct() {
 
       // Reset form
       setName("");
-      setDescription("");
+      setDet("");
       setPrice("");
       setNewPrice("");
       setQuantity("");
@@ -299,7 +299,7 @@ export default function AddProduct() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-red-700 to-red-600 p-6">
+          <div className="bg-gradient-to-r from-red-700 to-red-300 p-6">
             <h1 className="text-2xl md:text-3xl font-bold text-white">Product Management</h1>
             <p className="text-red-100 mt-1">Add and manage your inventory</p>
           </div>
@@ -367,9 +367,9 @@ export default function AddProduct() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     placeholder="Enter product description"
-                    value={description}
+                    value={det}
                     onFocus={handleFocus}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => setDet(e.target.value)}
                     rows={3}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
                   />
@@ -459,7 +459,7 @@ export default function AddProduct() {
                           <button
                             type="button"
                             onClick={() => removeImageAt(idx)}
-                            className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 opacity-100 "
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -552,7 +552,7 @@ export default function AddProduct() {
                                   {product.images && product.images[0] ? (
                                     <img
                                       src={product.images[0]}
-                                      alt={product.name || product.description}
+                                      alt={product.name || product.det}
                                       className="w-full sm:w-32 h-32 object-cover rounded-lg"
                                     />
                                   ) : (
@@ -577,6 +577,7 @@ export default function AddProduct() {
                                       <Package className="w-4 h-4 mr-1" />
                                       <span>Qty: {product.quantity}</span>
                                     </div>
+                                      <span>details: {product.det}</span>
                                     {product.sizes?.length > 0 && (
                                       <div className="mt-1 flex flex-wrap gap-1">
                                         {product.sizes.map((size, idx) => (

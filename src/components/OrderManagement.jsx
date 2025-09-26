@@ -114,7 +114,7 @@ const OrderManagement = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-red-700 to-red-600 p-6">
+          <div className="bg-gradient-to-r from-red-700 to-red-200 p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-white">Order Management</h1>
@@ -123,7 +123,7 @@ const OrderManagement = () => {
               <button
                 onClick={fetchOrders}
                 disabled={loading}
-                className="mt-4 md:mt-0 px-4 py-2 bg-blue-400 bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
+                className="mt-4 md:mt-0 px-4 py-2 bg-blue-600 bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
               >
                 <RefreshCw className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
