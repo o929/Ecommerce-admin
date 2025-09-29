@@ -1,49 +1,49 @@
 {
-  "hash": "e7374e41",
-  "configHash": "8cb73f56",
-  "lockfileHash": "a5120dba",
-  "browserHash": "2f74792d",
+  "hash": "a5dfc55f",
+  "configHash": "79097195",
+  "lockfileHash": "6812ec4a",
+  "browserHash": "e298b8fb",
   "optimized": {
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "7c0ac4f5",
+      "fileHash": "1e6c403a",
       "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "7c4a22a6",
+      "fileHash": "8be9adef",
       "needsInterop": true
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "a93faebf",
+      "fileHash": "3095bd92",
       "needsInterop": false
     },
     "lucide-react": {
       "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
       "file": "lucide-react.js",
-      "fileHash": "8d014683",
+      "fileHash": "2eb61034",
       "needsInterop": false
     },
     "firebase/firestore": {
       "src": "../../node_modules/firebase/firestore/dist/esm/index.esm.js",
       "file": "firebase_firestore.js",
-      "fileHash": "ff5076f6",
+      "fileHash": "4a5ac43b",
       "needsInterop": false
     },
     "firebase/app": {
       "src": "../../node_modules/firebase/app/dist/esm/index.esm.js",
       "file": "firebase_app.js",
-      "fileHash": "d93047bd",
+      "fileHash": "2a710061",
       "needsInterop": false
     },
     "firebase/storage": {
       "src": "../../node_modules/firebase/storage/dist/esm/index.esm.js",
       "file": "firebase_storage.js",
-      "fileHash": "14d61ee2",
+      "fileHash": "d650b066",
       "needsInterop": false
     }
   },
@@ -54,8 +54,8 @@
     "chunk-32EALFBN": {
       "file": "chunk-32EALFBN.js"
     },
-    "chunk-UBO4I7US": {
-      "file": "chunk-UBO4I7US.js"
+    "chunk-IIWNWHFI": {
+      "file": "chunk-IIWNWHFI.js"
     },
     "chunk-G3PMV62Z": {
       "file": "chunk-G3PMV62Z.js"

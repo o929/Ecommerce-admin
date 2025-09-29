@@ -133,6 +133,7 @@ const OrderManagement = () => {
         </div>
 
         {/* Content */}
+        
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-700"></div>
@@ -168,7 +169,26 @@ const OrderManagement = () => {
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
-
+{order.location && order.location.lat && order.location.lng && (
+        <div className="mt-6">
+          <h3 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+            <MapPin className="w-5 h-5 mr-2" />
+            Delivery Location
+          </h3>
+          <div className="w-full h-64 rounded-lg overflow-hidden border">
+            <iframe
+              title={`map-${order.id}`}
+                      src={`https://www.google.com/maps?q=${order.location.lat},${order.location.lng}&z=15&output=embed`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
+      )}
                   {/* Client Details */}
                   {order.client && (
                     <div className="bg-gray-50 rounded-xl p-4 mb-6">
@@ -246,6 +266,7 @@ const OrderManagement = () => {
             ))}
           </div>
         )}
+        
       </div>
 
       {/* Confirm Delete Modal */}

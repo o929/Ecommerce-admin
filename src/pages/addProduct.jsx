@@ -228,6 +228,7 @@ export default function AddProduct() {
   }, []);
 
   const confirmDelete = useCallback(async () => {
+    
     if (!selectedProductId) return;
     try {
       await deleteDoc(doc(db, "products", selectedProductId));

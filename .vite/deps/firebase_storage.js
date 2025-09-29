@@ -13,7 +13,7 @@ import {
   pingServer,
   registerVersion,
   updateEmulatorBanner
-} from "./chunk-UBO4I7US.js";
+} from "./chunk-IIWNWHFI.js";
 import "./chunk-G3PMV62Z.js";
 
 // node_modules/@firebase/storage/dist/index.esm.js
