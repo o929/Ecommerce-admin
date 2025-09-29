@@ -98,38 +98,62 @@ export default function AddProduct() {
     setErrormessage("");
   };
 
-  const handleImageChange = useCallback((e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
+  const handleImageChange = useCallback(async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
 
-    // Validate
-    for (let file of files) {
-      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-        setErrormessage("Only JPEG/PNG images are allowed.");
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setErrormessage("Each file must be less than 5MB.");
-        return;
-      }
+  const compressedFiles = [];
+
+  for (let file of files) {
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      setErrormessage("Only JPEG/PNG images are allowed.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrormessage("Each file must be less than 5MB.");
+      return;
     }
 
-    // Append files and previews
-    setImages((prev) => [...prev, ...files]);
-    const newPreviews = files.map((f) => URL.createObjectURL(f));
-    setPreviews((prev) => [...prev, ...newPreviews]);
-  }, []);
+    // Convert to WebP with compression
+    const compressed = await new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
 
-  const removeImageAt = useCallback((index) => {
-    const url = previews[index];
-    if (url) {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (e) {}
-    }
-    setPreviews((prev) => prev.filter((_, i) => i !== index));
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }, [previews]);
+        // Keep original size (or you can resize here if you want)
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const webpFile = new File([blob], file.name.split(".")[0] + ".webp", {
+                type: "image/webp",
+                lastModified: Date.now(),
+              });
+              resolve(webpFile);
+            } else {
+              resolve(file); // fallback if conversion fails
+            }
+          },
+          "image/webp",
+          0.7 // compression quality (0–1, lower = more compression)
+        );
+      };
+    });
+
+    compressedFiles.push(compressed);
+  }
+
+  // Append compressed files and previews
+  setImages((prev) => [...prev, ...compressedFiles]);
+  const newPreviews = compressedFiles.map((f) => URL.createObjectURL(f));
+  setPreviews((prev) => [...prev, ...newPreviews]);
+}, []);
 
   const toggleSize = useCallback((value) => {
     setSizes((prev) => (prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]));
