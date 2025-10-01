@@ -30,6 +30,7 @@ export default function AddProduct() {
   const [det, setDet] = useState("");
   const [price, setPrice] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [shippingPrice, setShippingPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [category, setCategory] = useState("");
   const [sizes, setSizes] = useState([]);
@@ -171,6 +172,7 @@ export default function AddProduct() {
       !det.trim() ||
       !price ||
       !newPrice ||
+      !shippingPrice||
       !quantity ||
       !category ||
       images.length === 0 ||
@@ -210,6 +212,7 @@ export default function AddProduct() {
         det: det.trim(),
         price: parseFloat(price),
         newPrice: parseFloat(newPrice),
+        shippingPrice: parseFloat(shippingPrice),
         quantity: parseInt(quantity, 10),
         category,
         sizes,
@@ -230,6 +233,7 @@ export default function AddProduct() {
       setDet("");
       setPrice("");
       setNewPrice("");
+      setShippingPrice("");
       setQuantity("");
       setCategory("");
       setSizes([]);
@@ -441,6 +445,20 @@ export default function AddProduct() {
                         placeholder="0"
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                     <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">shippingPrice</label>
+                    <div className="relative">
+                      <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={shippingPrice}
+                        onChange={(e) => setShippingPrice(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-colors"
                       />
                     </div>
