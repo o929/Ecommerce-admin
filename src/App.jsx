@@ -2,13 +2,14 @@ import React from "react";
 import { HashRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import OrderManagement from "./components/OrderManagement";
 import AddProduct from "./pages/AddProduct";
+import Dashboard from "./components/Dashboard";
 import AddHero from "./pages/AddHero";
 import { Box, ShoppingCart, PlusCircle, LayoutDashboard, Package, Home } from "lucide-react";
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50 flex mb-30">
         {/* Side Navigation */}
         <nav className="w-64 bg-white shadow-lg flex-shrink-0 hidden md:block">
           <div className="p-6">
@@ -51,6 +52,19 @@ function App() {
                 <PlusCircle className="w-5 h-5 mr-3" />
                 Add Product
               </NavLink>
+  <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  isActive
+                    ? "text-red-700"
+                    : "text-gray-600 hover:text-gray-900"
+                }`
+              }
+            >
+              <LayoutDashboard className="w-6 h-6" />
+              <span className="text-xs mt-1">Dashboard</span>
+            </NavLink>
 
               <NavLink
                 to="/orders"
@@ -100,6 +114,20 @@ function App() {
               <span className="text-xs mt-1">Product</span>
             </NavLink>
 
+                <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  isActive
+                    ? "text-red-700"
+                    : "text-gray-600 hover:text-gray-900"
+                }`
+              }
+            >
+              <LayoutDashboard className="w-6 h-6" />
+              <span className="text-xs mt-1">Dashboard</span>
+            </NavLink>
+
             <NavLink
               to="/orders"
               className={({ isActive }) =>
@@ -133,6 +161,7 @@ function App() {
               <Route path="/" element={<AddProduct />}  />
               <Route path="/add-product" element={<AddProduct />} />
               <Route path="/add-hero" element={<AddHero />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/orders" element={<OrderManagement />} />
             </Routes>
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { 
   RefreshCw, 
@@ -276,6 +276,49 @@ const OrderManagement = () => {
                       </span>
                     </div>
                   </div>
+                  {/* Order Status */}
+<div className="mt-4 pt-4 border-t border-gray-200">
+  <div className="flex justify-between items-center">
+    <span className="text-lg font-semibold text-gray-900">Order Status:</span>
+    
+    <select
+      value={order.status || "Pending"}
+      onChange={async (e) => {
+        const newStatus = e.target.value;
+        try {
+          // update Firestore
+          await updateDoc(doc(db, "orders", order.id), { status: newStatus });
+          // update local state
+          setOrders((prev) =>
+            prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
+          );
+          setMessage("Order status updated!");
+        } catch (error) {
+          console.error("Error updating status:", error);
+          setErrorMessage("Failed to update status");
+        }
+      }}
+      className="px-3 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+    >
+      <option value="Pending">Pending</option>
+      <option value="In Transit">In Transit</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+
+    <span
+      className={`ml-4 text-md font-bold ${
+        order.status === "Delivered"
+          ? "text-green-600"
+          : order.status === "In Transit"
+          ? "text-yellow-600"
+          : "text-red-600"
+      }`}
+    >
+      {order.status || "Pending"}
+    </span>
+  </div>
+</div>
+
                 </div>
               </div>
             ))}
