@@ -57,7 +57,7 @@ const OrderManagement = () => {
       }));
       
       setCancellations(cancellationsData);
-      console.log("Cancellations data:", cancellationsData); // Add this for debugging
+      // console.log("Cancellations data:", cancellationsData); // Add this for debugging
     }, (error) => {
       console.error("Error fetching cancellations:", error);
       setErrorMessage("Failed to fetch cancellations. Please try again.");
@@ -76,36 +76,36 @@ const OrderManagement = () => {
   }, []);
 
   // Function to approve cancellation and update order status
-  const handleApproveCancellation = useCallback(async (orderDocId, cancellationId) => {
-    try {
-      // Update the order status to "Cancelled"
-      await updateDoc(doc(db, "orders", orderDocId), { 
-        status: "Cancelled",
-        canceled: true
-      });
+  // const handleApproveCancellation = useCallback(async (orderDocId, cancellationId) => {
+  //   try {
+  //     // Update the order status to "Cancelled"
+  //     await updateDoc(doc(db, "orders", orderDocId), { 
+  //       status: "Cancelled",
+  //       canceled: true
+  //     });
       
-      // Delete the cancellation request after approval
-      await deleteDoc(doc(db, "cancellations", cancellationId));
+  //     // Delete the cancellation request after approval
+  //     await deleteDoc(doc(db, "cancellations", cancellationId));
       
-      setMessage("Order has been cancelled successfully");
-    } catch (error) {
-      console.error("Error approving cancellation:", error);
-      setErrorMessage("Failed to approve cancellation");
-    }
-  }, []);
+  //     setMessage("Order has been cancelled successfully");
+  //   } catch (error) {
+  //     console.error("Error approving cancellation:", error);
+  //     setErrorMessage("Failed to approve cancellation");
+  //   }
+  // }, []);
 
   // Function to reject cancellation (remove cancellation request)
-  const handleRejectCancellation = useCallback(async (cancellationId) => {
-    try {
-      // Delete the cancellation request
-      await deleteDoc(doc(db, "cancellations", cancellationId));
+  // const handleRejectCancellation = useCallback(async (cancellationId) => {
+  //   try {
+  //     // Delete the cancellation request
+  //     await deleteDoc(doc(db, "cancellations", cancellationId));
       
-      setMessage("Cancellation request has been rejected");
-    } catch (error) {
-      console.error("Error rejecting cancellation:", error);
-      setErrorMessage("Failed to reject cancellation");
-    }
-  }, []);
+  //     setMessage("Cancellation request has been rejected");
+  //   } catch (error) {
+  //     console.error("Error rejecting cancellation:", error);
+  //     setErrorMessage("Failed to reject cancellation");
+  //   }
+  // }, []);
 
   const confirmDelete = useCallback(async () => {
     if (!deleteId) return;
@@ -241,7 +241,7 @@ const OrderManagement = () => {
               const hasCancellationRequest = orderCancellations.length > 0;
               
               // Debug logging
-              console.log(`Order ${order.id} (docId: ${order.docId}) has ${orderCancellations.length} cancellation requests`);
+              // console.log(`Order ${order.id} (docId: ${order.docId}) has ${orderCancellations.length} cancellation requests`);
               
               return (
                 <div key={order.docId} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
