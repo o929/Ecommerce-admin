@@ -16,6 +16,7 @@ import {
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -122,19 +123,37 @@ const OrderManagement = () => {
   }, [deleteId]);
 
   const confirmDeleteAll = useCallback(async () => {
+    if (orders.length === 0) {
+      setShowDeleteAllModal(false);
+      return;
+    }
+
+    setIsDeletingAll(true);
+    
     try {
       // Delete all orders
       const deletePromises = orders.map(order => deleteDoc(doc(db, "orders", order.docId)));
       await Promise.all(deletePromises);
       
       setMessage("All orders deleted successfully!");
+      // Close modal immediately after successful deletion
       setShowDeleteAllModal(false);
     } catch (error) {
       console.error("Error deleting all orders:", error);
       setErrorMessage("Failed to delete all orders. Please try again.");
+      // Also close modal on error
       setShowDeleteAllModal(false);
+    } finally {
+      setIsDeletingAll(false);
     }
   }, [orders]);
+
+  // Close modal when orders become empty
+  useEffect(() => {
+    if (orders.length === 0 && showDeleteAllModal) {
+      setShowDeleteAllModal(false);
+    }
+  }, [orders.length, showDeleteAllModal]);
 
   useEffect(() => {
     if (message || errorMessage) {
@@ -187,11 +206,11 @@ const OrderManagement = () => {
               </div>
               <button
                 onClick={handleDeleteAll}
-                disabled={loading || orders.length === 0}
+                disabled={loading || orders.length === 0 || isDeletingAll}
                 className="mt-4 md:mt-0 px-4 py-2 bg-red-600 bg-opacity-90 hover:bg-opacity-100 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
               >
                 <Trash2 className="w-5 h-5 mr-2" />
-                Delete All
+                {isDeletingAll ? "Deleting..." : "Delete All"}
               </button>
             </div>
           </div>
@@ -450,9 +469,17 @@ const OrderManagement = () => {
               </button>
               <button
                 onClick={confirmDeleteAll}
-                className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
+                disabled={isDeletingAll}
+                className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50 flex items-center"
               >
-                Delete All
+                {isDeletingAll ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete All"
+                )}
               </button>
             </div>
           </div>
