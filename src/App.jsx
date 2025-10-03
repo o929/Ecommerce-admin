@@ -18,7 +18,7 @@ function App() {
               <div className="w-10 h-10 bg-red-700 rounded-lg flex items-center justify-center">
                 <Package className="w-6 h-6 text-white" />
               </div>
-              <h1 className="ml-3 text-2xl font-bold text-gray-900">Small Shop</h1>
+              <h1 className="ml-3 text-2xl font-bold text-gray-900">E-commerce</h1>
             </div>
             
             {/* Navigation Links */}
