@@ -24,6 +24,37 @@ const OrderManagement = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [cancellations, setCancellations] = useState([]);
 
+// Add these state variables near the top of the component
+const [orderMessages, setOrderMessages] = useState({});
+
+
+  useEffect(() => {
+  const unsubscribe = onSnapshot(collection(db, "orderMessages"), (snapshot) => {
+    const messagesData = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Filter only customer messages and group by orderId
+    const customerMessages = messagesData.filter(msg => msg.sender === "customer");
+    // const groupedMessages = {};
+    // customerMessages.forEach(msg => {
+    //   if (!groupedMessages[msg.orderId]) {
+    //     groupedMessages[msg.orderId] = [];
+    //   }
+    //   groupedMessages[msg.orderId].push(msg);
+    // });
+    
+    setOrderMessages(customerMessages);
+    // console.log("Order messages data:", groupedMessages); // Add this for debugging
+  }, (error) => {
+    console.error("Error fetching messages:", error);
+    setErrorMessage("Failed to fetch messages. Please try again.");
+  });
+
+  return () => unsubscribe();
+}, []);
+
   // Set up real-time listener for orders
   useEffect(() => {
     setLoading(true);
@@ -421,6 +452,37 @@ const OrderManagement = () => {
                         </span>
                       </div>
                     </div>
+                    {/* A message to the deleivary guy   */}
+<div className="mt-6 pt-4 border-t border-gray-200">
+  <h3 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+    </svg>
+    Customer Messages
+  </h3>
+  
+  {/* Display customer messages */}
+  {orderMessages[order.docId] && orderMessages[order.docId].length > 0 ? (
+    <div className="space-y-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+      {orderMessages[order.docId].map((msg) => (
+        <div 
+          key={msg.id} 
+          className="p-3 rounded-lg bg-gray-200 mr-8"
+        >
+          <div className="flex justify-between items-start">
+            <span className="font-medium text-gray-800">Customer</span>
+            <span className="text-xs text-gray-500">
+              {msg.timestamp ? formatDate(msg.timestamp) : 'Just now'}
+            </span>
+          </div>
+          <p className="mt-1 text-gray-700">{msg.message}</p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-gray-500 italic">No messages from customer</p>
+  )}
+</div>
                   </div>
                 </div>
               );

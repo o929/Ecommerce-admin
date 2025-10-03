@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -21,6 +21,7 @@ const Dashboard = () => {
 
   // 🔥 Fetch Dashboard Data from Firestore
   useEffect(() => {
+    setLoading(true)
     const fetchDashboardData = async () => {
       try {
         // Fetch Orders
@@ -35,7 +36,7 @@ const Dashboard = () => {
           return acc;
         }, {});
         setStatusCounts(statusMap);
-
+setLoading(false)
         // Generate Stats from Orders
         const totalOrders = orders.length;
         const delivered = statusMap["Delivered"] || 0;
@@ -49,6 +50,7 @@ const Dashboard = () => {
           { title: 'Pending', value: pending, change: '-3%', icon: Package, color: 'bg-yellow-100 text-yellow-600' },
           { title: 'In Transit', value: inTransit, change: '+4%', icon: Package, color: 'bg-blue-100 text-blue-600' },
           { title: 'Delivered', value: delivered, change: '+15%', icon: Package, color: 'bg-green-100 text-green-600' },
+
         ]);
 
         // Fetch Top Products
@@ -71,6 +73,11 @@ const Dashboard = () => {
   // just replace the old mock arrays with `statsData`, `ordersData`, `topProducts`
 
   return (
+    <>
+    {loading ? <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-700"></div>
+          </div>
+          : 
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar, Navbar, Main content ... */}
       <div className="p-6 flex-1">
@@ -95,7 +102,11 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+
     </div>
+  }
+    </>
   );
 };
 

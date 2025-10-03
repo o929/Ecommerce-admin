@@ -55,15 +55,15 @@ function App() {
   <NavLink
               to="/dashboard"
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                   isActive
-                    ? "text-red-700"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-red-100 text-red-700"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
-              <LayoutDashboard className="w-6 h-6" />
-              <span className="text-xs mt-1">Dashboard</span>
+              <LayoutDashboard className="w-5 h-5 mr-3" />
+              Dashboard
             </NavLink>
 
               <NavLink

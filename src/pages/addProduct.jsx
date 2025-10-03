@@ -306,7 +306,7 @@ export default function AddProduct() {
   }, [filteredProducts]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 ">
       {/* Toast Messages */}
       {(message || errormessage) && (
         <div className="fixed top-4 right-4 z-50">
