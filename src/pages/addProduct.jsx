@@ -34,6 +34,20 @@ export default function AddProduct() {
   const [quantity, setQuantity] = useState("");
   const [category, setCategory] = useState("");
   const [sizes, setSizes] = useState([]);
+const [colors, setColors] = useState([]);
+const [currentColor, setCurrentColor] = useState("#000000"); // default color picker value
+
+// Add a color
+const addColor = () => {
+  if (!colors.includes(currentColor)) {
+    setColors([...colors, currentColor]);
+  }
+};
+
+// Remove a color
+const removeColor = (c) => {
+  setColors(colors.filter((color) => color !== c));
+};
 
   // Files + previews
   const [images, setImages] = useState([]);
@@ -216,6 +230,7 @@ export default function AddProduct() {
         quantity: parseInt(quantity, 10),
         category,
         sizes,
+        colors,
         images: uploadedUrls,
         createdAt: new Date(),
       });
@@ -390,6 +405,45 @@ export default function AddProduct() {
                     />
                   </div>
                 </div>
+                {/* Product Colors */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Available Colors</label>
+  
+  <div className="flex items-center gap-3 mb-3">
+    <input
+      type="color"
+      value={currentColor}
+      onChange={(e) => setCurrentColor(e.target.value)}
+      className="w-12 h-12 cursor-pointer border rounded"
+    />
+    <button
+      type="button"
+      onClick={addColor}
+      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+    >
+      Add Color
+    </button>
+  </div>
+
+  <div className="flex flex-wrap gap-3">
+    {colors.map((c, idx) => (
+      <div key={idx} className="flex items-center gap-2">
+        <span
+          className="w-8 h-8 rounded-full border"
+          style={{ backgroundColor: c }}
+        />
+        <button
+          type="button"
+          onClick={() => removeColor(c)}
+          className="text-sm text-red-600 hover:underline"
+        >
+          Remove
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
+
 
                 {/* Description */}
                 <div>

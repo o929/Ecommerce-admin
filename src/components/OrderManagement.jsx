@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { 
   Trash2, 
@@ -17,43 +17,40 @@ const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); // New state for individual delete
   const [showModal, setShowModal] = useState(false);
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [cancellations, setCancellations] = useState([]);
-
-// Add these state variables near the top of the component
-const [orderMessages, setOrderMessages] = useState({});
-
+  const [orderMessages, setOrderMessages] = useState({});
 
   useEffect(() => {
-  const unsubscribe = onSnapshot(collection(db, "orderMessages"), (snapshot) => {
-    const messagesData = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    
-    // Filter only customer messages and group by orderId
-    const customerMessages = messagesData.filter(msg => msg.sender === "customer");
-    // const groupedMessages = {};
-    // customerMessages.forEach(msg => {
-    //   if (!groupedMessages[msg.orderId]) {
-    //     groupedMessages[msg.orderId] = [];
-    //   }
-    //   groupedMessages[msg.orderId].push(msg);
-    // });
-    
-    setOrderMessages(customerMessages);
-    // console.log("Order messages data:", groupedMessages); // Add this for debugging
-  }, (error) => {
-    console.error("Error fetching messages:", error);
-    setErrorMessage("Failed to fetch messages. Please try again.");
-  });
+    const unsubscribe = onSnapshot(collection(db, "orderMessages"), (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Filter only customer messages and group by orderId
+      const customerMessages = messagesData.filter(msg => msg.sender === "customer");
+      const groupedMessages = {};
+      customerMessages.forEach(msg => {
+        if (!groupedMessages[msg.orderId]) {
+          groupedMessages[msg.orderId] = [];
+        }
+        groupedMessages[msg.orderId].push(msg);
+      });
+      
+      setOrderMessages(groupedMessages);
+    }, (error) => {
+      console.error("Error fetching messages:", error);
+      setErrorMessage("Failed to fetch messages. Please try again.");
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
   // Set up real-time listener for orders
   useEffect(() => {
@@ -88,7 +85,6 @@ const [orderMessages, setOrderMessages] = useState({});
       }));
       
       setCancellations(cancellationsData);
-      // console.log("Cancellations data:", cancellationsData); // Add this for debugging
     }, (error) => {
       console.error("Error fetching cancellations:", error);
       setErrorMessage("Failed to fetch cancellations. Please try again.");
@@ -106,52 +102,197 @@ const [orderMessages, setOrderMessages] = useState({});
     setShowDeleteAllModal(true);
   }, []);
 
-  // Function to approve cancellation and update order status
-  // const handleApproveCancellation = useCallback(async (orderDocId, cancellationId) => {
-  //   try {
-  //     // Update the order status to "Cancelled"
-  //     await updateDoc(doc(db, "orders", orderDocId), { 
-  //       status: "Cancelled",
-  //       canceled: true
-  //     });
+  // Helper function to delete messages for a specific order
+  const deleteOrderMessages = useCallback(async (orderId) => {
+    try {
+      console.log(`Attempting to delete messages for order ID: ${orderId}`);
       
-  //     // Delete the cancellation request after approval
-  //     await deleteDoc(doc(db, "cancellations", cancellationId));
+      // First, let's see all messages in the collection
+      const allMessagesQuery = collection(db, "orderMessages");
+      const allMessagesSnapshot = await getDocs(allMessagesQuery);
+      console.log("All messages in collection:");
+      allMessagesSnapshot.docs.forEach(doc => {
+        console.log(`Message ID: ${doc.id}, Data:`, doc.data());
+      });
       
-  //     setMessage("Order has been cancelled successfully");
-  //   } catch (error) {
-  //     console.error("Error approving cancellation:", error);
-  //     setErrorMessage("Failed to approve cancellation");
-  //   }
-  // }, []);
+      // Now query for messages with this orderId
+      const messagesQuery = query(
+        collection(db, "orderMessages"),
+        where("orderId", "==", orderId)
+      );
+      
+      const messagesSnapshot = await getDocs(messagesQuery);
+      console.log(`Found ${messagesSnapshot.size} messages for orderId ${orderId}`);
+      
+      if (messagesSnapshot.size > 0) {
+        messagesSnapshot.docs.forEach(doc => {
+          console.log(`Message to delete: ${doc.id}, Data:`, doc.data());
+        });
+        
+        const deletePromises = messagesSnapshot.docs.map(messageDoc => 
+          deleteDoc(doc(db, "orderMessages", messageDoc.id))
+        );
+        
+        await Promise.all(deletePromises);
+        console.log(`Deleted ${messagesSnapshot.size} messages for order ${orderId}`);
+      } else {
+        // Try with alternative field names or ID formats
+        console.log(`No messages found with orderId ${orderId}, trying alternative queries...`);
+        
+        // Try with order.id if different from docId
+        const order = orders.find(o => o.docId === orderId);
+        if (order && order.id && order.id !== orderId) {
+          console.log(`Trying with order.id: ${order.id}`);
+          const altQuery = query(
+            collection(db, "orderMessages"),
+            where("orderId", "==", order.id)
+          );
+          const altSnapshot = await getDocs(altQuery);
+          console.log(`Found ${altSnapshot.size} messages with order.id ${order.id}`);
+          
+          if (altSnapshot.size > 0) {
+            const deletePromises = altSnapshot.docs.map(messageDoc => 
+              deleteDoc(doc(db, "orderMessages", messageDoc.id))
+            );
+            await Promise.all(deletePromises);
+            console.log(`Deleted ${altSnapshot.size} messages for order ${order.id}`);
+          }
+        }
+        
+        // Try with different field names
+        const fieldNames = ["orderId", "orderRef", "orderID", "order_id"];
+        for (const fieldName of fieldNames) {
+          const fieldQuery = query(
+            collection(db, "orderMessages"),
+            where(fieldName, "==", orderId)
+          );
+          const fieldSnapshot = await getDocs(fieldQuery);
+          console.log(`Found ${fieldSnapshot.size} messages with field ${fieldName} = ${orderId}`);
+          
+          if (fieldSnapshot.size > 0) {
+            const deletePromises = fieldSnapshot.docs.map(messageDoc => 
+              deleteDoc(doc(db, "orderMessages", messageDoc.id))
+            );
+            await Promise.all(deletePromises);
+            console.log(`Deleted ${fieldSnapshot.size} messages using field ${fieldName}`);
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting messages:", error);
+      throw error;
+    }
+  }, [orders]);
 
-  // Function to reject cancellation (remove cancellation request)
-  // const handleRejectCancellation = useCallback(async (cancellationId) => {
-  //   try {
-  //     // Delete the cancellation request
-  //     await deleteDoc(doc(db, "cancellations", cancellationId));
+  // Helper function to delete cancellations for a specific order
+  const deleteOrderCancellations = useCallback(async (orderId) => {
+    try {
+      console.log(`Attempting to delete cancellations for order ID: ${orderId}`);
       
-  //     setMessage("Cancellation request has been rejected");
-  //   } catch (error) {
-  //     console.error("Error rejecting cancellation:", error);
-  //     setErrorMessage("Failed to reject cancellation");
-  //   }
-  // }, []);
+      // First, let's see all cancellations in the collection
+      const allCancellationsQuery = collection(db, "cancellations");
+      const allCancellationsSnapshot = await getDocs(allCancellationsQuery);
+      console.log("All cancellations in collection:");
+      allCancellationsSnapshot.docs.forEach(doc => {
+        console.log(`Cancellation ID: ${doc.id}, Data:`, doc.data());
+      });
+      
+      // Now query for cancellations with this orderId
+      const cancellationsQuery = query(
+        collection(db, "cancellations"),
+        where("orderId", "==", orderId)
+      );
+      
+      const cancellationsSnapshot = await getDocs(cancellationsQuery);
+      console.log(`Found ${cancellationsSnapshot.size} cancellations for orderId ${orderId}`);
+      
+      if (cancellationsSnapshot.size > 0) {
+        cancellationsSnapshot.docs.forEach(doc => {
+          console.log(`Cancellation to delete: ${doc.id}, Data:`, doc.data());
+        });
+        
+        const deletePromises = cancellationsSnapshot.docs.map(cancellationDoc => 
+          deleteDoc(doc(db, "cancellations", cancellationDoc.id))
+        );
+        
+        await Promise.all(deletePromises);
+        console.log(`Deleted ${cancellationsSnapshot.size} cancellations for order ${orderId}`);
+      } else {
+        // Try with alternative field names or ID formats
+        console.log(`No cancellations found with orderId ${orderId}, trying alternative queries...`);
+        
+        // Try with order.id if different from docId
+        const order = orders.find(o => o.docId === orderId);
+        if (order && order.id && order.id !== orderId) {
+          console.log(`Trying with order.id: ${order.id}`);
+          const altQuery = query(
+            collection(db, "cancellations"),
+            where("orderId", "==", order.id)
+          );
+          const altSnapshot = await getDocs(altQuery);
+          console.log(`Found ${altSnapshot.size} cancellations with order.id ${order.id}`);
+          
+          if (altSnapshot.size > 0) {
+            const deletePromises = altSnapshot.docs.map(cancellationDoc => 
+              deleteDoc(doc(db, "cancellations", cancellationDoc.id))
+            );
+            await Promise.all(deletePromises);
+            console.log(`Deleted ${altSnapshot.size} cancellations for order ${order.id}`);
+          }
+        }
+        
+        // Try with different field names
+        const fieldNames = ["orderId", "orderRef", "orderID", "order_id"];
+        for (const fieldName of fieldNames) {
+          const fieldQuery = query(
+            collection(db, "cancellations"),
+            where(fieldName, "==", orderId)
+          );
+          const fieldSnapshot = await getDocs(fieldQuery);
+          console.log(`Found ${fieldSnapshot.size} cancellations with field ${fieldName} = ${orderId}`);
+          
+          if (fieldSnapshot.size > 0) {
+            const deletePromises = fieldSnapshot.docs.map(cancellationDoc => 
+              deleteDoc(doc(db, "cancellations", cancellationDoc.id))
+            );
+            await Promise.all(deletePromises);
+            console.log(`Deleted ${fieldSnapshot.size} cancellations using field ${fieldName}`);
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting cancellations:", error);
+      throw error;
+    }
+  }, [orders]);
 
   const confirmDelete = useCallback(async () => {
     if (!deleteId) return;
 
+    setIsDeleting(true); // Start loading state
     try {
+      // First, delete all messages for this order
+      await deleteOrderMessages(deleteId);
+      
+      // Then, delete all cancellations for this order
+      await deleteOrderCancellations(deleteId);
+      
+      // Finally, delete the order itself
       await deleteDoc(doc(db, "orders", deleteId));
-      setMessage("Order deleted successfully!");
+      
+      setMessage("Order and associated data deleted successfully!");
       setShowModal(false);
       setDeleteId(null);
     } catch (error) {
       console.error("Error deleting order:", error);
       setErrorMessage("Failed to delete order. Please try again.");
       setShowModal(false);
+    } finally {
+      setIsDeleting(false); // End loading state
     }
-  }, [deleteId]);
+  }, [deleteId, deleteOrderMessages, deleteOrderCancellations]);
 
   const confirmDeleteAll = useCallback(async () => {
     if (orders.length === 0) {
@@ -162,22 +303,37 @@ const [orderMessages, setOrderMessages] = useState({});
     setIsDeletingAll(true);
     
     try {
-      // Delete all orders
-      const deletePromises = orders.map(order => deleteDoc(doc(db, "orders", order.docId)));
-      await Promise.all(deletePromises);
+      // Process each order sequentially to avoid overwhelming the database
+      for (const order of orders) {
+        try {
+          console.log(`Processing order: ${order.docId}`);
+          
+          // Delete messages for this order
+          await deleteOrderMessages(order.docId);
+          
+          // Delete cancellations for this order
+          await deleteOrderCancellations(order.docId);
+          
+          // Delete the order itself
+          await deleteDoc(doc(db, "orders", order.docId));
+          
+          console.log(`Successfully deleted order: ${order.docId}`);
+        } catch (error) {
+          console.error(`Error deleting order ${order.docId}:`, error);
+          // Continue with other orders even if one fails
+        }
+      }
       
-      setMessage("All orders deleted successfully!");
-      // Close modal immediately after successful deletion
+      setMessage("All orders and associated data deleted successfully!");
       setShowDeleteAllModal(false);
     } catch (error) {
       console.error("Error deleting all orders:", error);
       setErrorMessage("Failed to delete all orders. Please try again.");
-      // Also close modal on error
       setShowDeleteAllModal(false);
     } finally {
       setIsDeletingAll(false);
     }
-  }, [orders]);
+  }, [orders, deleteOrderMessages, deleteOrderCancellations]);
 
   // Close modal when orders become empty
   useEffect(() => {
@@ -237,7 +393,7 @@ const [orderMessages, setOrderMessages] = useState({});
               </div>
               <button
                 onClick={handleDeleteAll}
-                disabled={loading || orders.length === 0 || isDeletingAll}
+                disabled={loading || orders.length === 0 || isDeletingAll || isDeleting}
                 className="mt-4 md:mt-0 px-4 py-2 bg-red-600 bg-opacity-90 hover:bg-opacity-100 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
               >
                 <Trash2 className="w-5 h-5 mr-2" />
@@ -265,14 +421,10 @@ const [orderMessages, setOrderMessages] = useState({});
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {orders.map(order => {
               // Check if there are cancellation requests for this order
-              // Try matching by both order.id and order.docId to cover all possibilities
               const orderCancellations = cancellations.filter(c => 
                 c.orderId === order.docId || c.orderId === order.id
               );
               const hasCancellationRequest = orderCancellations.length > 0;
-              
-              // Debug logging
-              // console.log(`Order ${order.id} (docId: ${order.docId}) has ${orderCancellations.length} cancellation requests`);
               
               return (
                 <div key={order.docId} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
@@ -290,45 +442,51 @@ const [orderMessages, setOrderMessages] = useState({});
                       </div>
                       <button
                         onClick={() => handleDelete(order.docId)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        disabled={isDeleting || isDeletingAll}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        {isDeleting ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-700"></div>
+                        ) : (
+                          <Trash2 className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
-<div className="mt-4">
-  <h4 className="font-medium flex items-center mb-2 text-gray-800">
-    <MapPin className="mr-2 text-red-500" /> Delivery Location
-  </h4>
-  <div className="w-full h-72 rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
-    {order.location && order.location.lat && order.location.lng ? (
-      <iframe
-        title={`map-${order.id}`}
-        src={`https://www.google.com/maps?q=${order.location.lat},${order.location.lng}&t=k&z=17&output=embed`}
-        width="100%"
-        height="100%"
-        style={{ border: 0 }}
-        allowFullScreen
-        loading="lazy"
-        className="rounded-xl"
-      ></iframe>
-    ) : order.client?.address ? (
-      <iframe
-        title={`map-address-${order.id}`}
-        src={`https://www.google.com/maps?q=${encodeURIComponent(
-          order.client.address
-        )}&t=k&z=17&output=embed`}
-        width="100%"
-        height="100%"
-        style={{ border: 0 }}
-        allowFullScreen
-        loading="lazy"
-        className="rounded-xl"
-      ></iframe>
-    ) : (
-      <p className="text-gray-500 italic">No location provided</p>
-    )}
-  </div>
-</div>
+
+                    <div className="mt-4">
+                      <h4 className="font-medium flex items-center mb-2 text-gray-800">
+                        <MapPin className="mr-2 text-red-500" /> Delivery Location
+                      </h4>
+                      <div className="w-full h-72 rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
+                        {order.location && order.location.lat && order.location.lng ? (
+                          <iframe
+                            title={`map-${order.id}`}
+                            src={`https://www.google.com/maps?q=${order.location.lat},${order.location.lng}&t=k&z=17&output=embed`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            className="rounded-xl"
+                          ></iframe>
+                        ) : order.client?.address ? (
+                          <iframe
+                            title={`map-address-${order.id}`}
+                            src={`https://www.google.com/maps?q=${encodeURIComponent(
+                              order.client.address
+                            )}&t=k&z=17&output=embed`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            className="rounded-xl"
+                          ></iframe>
+                        ) : (
+                          <p className="text-gray-500 italic">No location provided</p>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Client Details */}
                     {order.client && (
@@ -384,6 +542,19 @@ const [orderMessages, setOrderMessages] = useState({});
                                 )}
                                 <span>Price: <span className="font-medium">${Number(item.price).toFixed(2)}</span></span>
                               </div>
+
+                                <div className="mt-1 text-sm font-medium text-red-700">
+                                                       {item.selectedColor && (
+                                                         <p className="text-sm text-gray-600 mt-1 flex items-center">
+          Color: 
+          <span
+            className="ml-2 w-5 h-5 rounded-full border"
+            style={{ backgroundColor: item.selectedColor }}
+            title={item.selectedColor}
+            />
+        </p>
+      )}
+      </div>
                               <div className="mt-1 text-sm font-medium text-red-700">
                                 Total: ${(item.qty * Number(item.price)).toFixed(2)}
                               </div>
@@ -402,46 +573,46 @@ const [orderMessages, setOrderMessages] = useState({});
                         </span>
                       </div>
                     </div>
+                    
                     {/* Order Status */}
-<div className="mt-4 pt-4 border-t border-gray-200">
-  <div className="flex justify-between items-center">
-    <span className="text-lg font-semibold text-gray-900">Order Status:</span>
-    
-    <select
-  value={order.status || "Pending"}
-  onChange={async (e) => {
-    const newStatus = e.target.value;
-    try {
-      await updateDoc(doc(db, "orders", order.docId), { status: newStatus });
-      setMessage("Order status updated!");
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setErrorMessage("Failed to update status");
-    }
-  }}
->
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Order Status:</span>
+                        
+                        <select
+                          value={order.status || "Pending"}
+                          onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            try {
+                              await updateDoc(doc(db, "orders", order.docId), { status: newStatus });
+                              setMessage("Order status updated!");
+                            } catch (error) {
+                              console.error("Error updating status:", error);
+                              setErrorMessage("Failed to update status");
+                            }
+                          }}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Transit">In Transit</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
 
-      <option value="Pending">Pending</option>
-      <option value="In Transit">In Transit</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Cancelled">Cancelled</option>
-    </select>
-
-    <span
-      className={`ml-4 text-md font-bold ${
-        order.status === "Delivered"
-          ? "text-green-600"
-          : order.status === "In Transit"
-          ? "text-yellow-600"
-          : order.status === "Cancelled"
-          ? "text-red-600"
-          : "text-red-600"
-      }`}
-    >
-      {order.status || "Pending"}
-    </span>
-  </div>
-</div>
+                        <span
+                          className={`ml-4 text-md font-bold ${
+                            order.status === "Delivered"
+                              ? "text-green-600"
+                              : order.status === "In Transit"
+                              ? "text-yellow-600"
+                              : order.status === "Cancelled"
+                              ? "text-red-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {order.status || "Pending"}
+                        </span>
+                      </div>
+                    </div>
 
                     {/* Cancellation Requests Status */}
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -452,37 +623,47 @@ const [orderMessages, setOrderMessages] = useState({});
                         </span>
                       </div>
                     </div>
-                    {/* A message to the deleivary guy   */}
-<div className="mt-6 pt-4 border-t border-gray-200">
-  <h3 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-    </svg>
-    Customer Messages
-  </h3>
-  
-  {/* Display customer messages */}
-  {orderMessages[order.docId] && orderMessages[order.docId].length > 0 ? (
-    <div className="space-y-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-lg">
-      {orderMessages[order.docId].map((msg) => (
-        <div 
-          key={msg.id} 
-          className="p-3 rounded-lg bg-gray-200 mr-8"
-        >
-          <div className="flex justify-between items-start">
-            <span className="font-medium text-gray-800">Customer</span>
-            <span className="text-xs text-gray-500">
-              {msg.timestamp ? formatDate(msg.timestamp) : 'Just now'}
-            </span>
-          </div>
-          <p className="mt-1 text-gray-700">{msg.message}</p>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-gray-500 italic">No messages from customer</p>
-  )}
-</div>
+                    
+                    {/* Customer Messages */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <h3 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+                        </svg>
+                        Customer Messages
+                      </h3>
+                      
+                      {/* Get messages for this order by either docId or id */}
+                      {(() => {
+                        const messagesForOrder = [
+                          ...(orderMessages[order.docId] || []),
+                          ...(orderMessages[order.id] || [])
+                        ];
+                        
+                        if (messagesForOrder.length > 0) {
+                          return (
+                            <div className="space-y-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                              {messagesForOrder.map((msg) => (
+                                <div 
+                                  key={msg.id} 
+                                  className="p-3 rounded-lg bg-gray-200 mr-8"
+                                >
+                                  <div className="flex justify-between items-start">
+                                    <span className="font-medium text-gray-800">Customer</span>
+                                    <span className="text-xs text-gray-500">
+                                      {msg.timestamp ? formatDate(msg.timestamp) : 'Just now'}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-gray-700">{msg.message}</p>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        } else {
+                          return <p className="text-gray-500 italic">No messages from customer</p>;
+                        }
+                      })()}
+                    </div>
                   </div>
                 </div>
               );
@@ -497,19 +678,28 @@ const [orderMessages, setOrderMessages] = useState({});
         <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this order? This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this order and all its associated messages? This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isDeleting}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50 flex items-center"
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>
@@ -521,11 +711,12 @@ const [orderMessages, setOrderMessages] = useState({});
         <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Delete All</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete ALL orders? This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete ALL orders and their associated messages? This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteAllModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isDeletingAll}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
