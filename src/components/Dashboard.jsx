@@ -82,7 +82,7 @@ setLoading(false)
       {/* Sidebar, Navbar, Main content ... */}
       <div className="p-6 flex-1">
         {/* Example: Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
           {statsData.map((stat, idx) => (
             <motion.div
               key={idx}
